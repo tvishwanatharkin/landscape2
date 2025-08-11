@@ -143,6 +143,9 @@ async fn collect_repository_data(gh: Object<DynGH>, repo_url: &str) -> Result<Re
     let participation_stats = gh.get_participation_stats(&owner, &repo).await?.all;
     let contributors_url = format!("https://{}/{}", get_github_host(), format!("{owner}/{repo}/graphs/contributors"));
 
+    println!("owner: {}", owner);
+    println!("repo: {}", repo);
+    println!("contributors_url: {}", contributors_url);
     // Prepare repository instance using the information collected
     Ok(RepositoryGithubData {
         generated_at: Utc::now(),
