@@ -141,13 +141,14 @@ async fn collect_repository_data(gh: Object<DynGH>, repo_url: &str) -> Result<Re
     let latest_commit = gh.get_latest_commit(&owner, &repo, &gh_repo.default_branch).await?;
     let latest_release = gh.get_latest_release(&owner, &repo).await?;
     let participation_stats = gh.get_participation_stats(&owner, &repo).await?.all;
+    let contributors_url = format!("https://{}/{}", get_github_host(), format!("{owner}/{repo}/graphs/contributors"));
 
     // Prepare repository instance using the information collected
     Ok(RepositoryGithubData {
         generated_at: Utc::now(),
         contributors: Contributors {
             count: contributors_count,
-            url: format!("https://github.com/{owner}/{repo}/graphs/contributors"),
+            url: contributors_url,
         },
         description: gh_repo.description,
         first_commit,
@@ -168,9 +169,6 @@ async fn collect_repository_data(gh: Object<DynGH>, repo_url: &str) -> Result<Re
     })
 }
 
-/// GitHub API base url.
-/// Kind of unused now.
-const GITHUB_API_URL: &str = "https://api.github.com";
 
 /// Type alias to represent a GH trait object.
 type DynGH = Box<dyn GH + Send + Sync>;
@@ -326,7 +324,7 @@ impl GH for GHApi {
 
 /// GitHub repository url regular expression.
 pub(crate) static GITHUB_REPO_URL: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new("^https://github.com/(?P<owner>[^/]+)/(?P<repo>[^/]+)/?$")
+    Regex::new("^https://.*/(?P<owner>[^/]+)/(?P<repo>[^/]+)/?$")
         .expect("exprs in GITHUB_REPO_URL to be valid")
 });
 
@@ -373,4 +371,9 @@ fn new_release_from(value: octorust::types::Release) -> Release {
 fn get_github_api_url() -> String {
     env::var("GITHUB_API_URL")
         .unwrap_or_else(|_| "https://api.github.com".to_string())
+}
+
+fn get_github_host() -> String {
+    env::var("GITHUB_HOST")
+        .unwrap_or_else(|_| "github.com".to_string())
 }
