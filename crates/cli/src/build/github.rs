@@ -169,7 +169,8 @@ async fn collect_repository_data(gh: Object<DynGH>, repo_url: &str) -> Result<Re
 }
 
 /// GitHub API base url.
-const GITHUB_API_URL: &str = &env::var("GITHUB_API_URL").unwrap_or("https://api.github.com".to_string());
+/// Kind of unused now.
+const GITHUB_API_URL: &str = "https://api.github.com";
 
 /// Type alias to represent a GH trait object.
 type DynGH = Box<dyn GH + Send + Sync>;
@@ -247,7 +248,8 @@ impl GH for GHApi {
     /// [GH::get_contributors_count]
     #[instrument(skip(self), err)]
     async fn get_contributors_count(&self, owner: &str, repo: &str) -> Result<usize> {
-        let url = format!("{GITHUB_API_URL}/repos/{owner}/{repo}/contributors?per_page=1&anon=true");
+        let github_api_url = get_github_api_url();
+        let url = format!("{github_api_url}/repos/{owner}/{repo}/contributors?per_page=1&anon=true");
         let response = self.http_client.head(url).send().await?;
         let count = get_last_page(response.headers())?.unwrap_or(1);
         Ok(count)
@@ -258,7 +260,8 @@ impl GH for GHApi {
     #[instrument(skip(self), err)]
     async fn get_first_commit(&self, owner: &str, repo: &str, ref_: &str) -> Result<Option<Commit>> {
         // Get last commits page
-        let url = format!("{GITHUB_API_URL}/repos/{owner}/{repo}/commits?sha={ref_}&per_page=1");
+        let github_api_url = get_github_api_url();
+        let url = format!("{github_api_url}/repos/{owner}/{repo}/commits?sha={ref_}&per_page=1");
         let response = self.http_client.head(url).send().await?;
         let last_page = get_last_page(response.headers())?.unwrap_or(1);
 
@@ -279,7 +282,8 @@ impl GH for GHApi {
     /// [GH::get_languages]
     #[instrument(skip(self), err)]
     async fn get_languages(&self, owner: &str, repo: &str) -> Result<Option<BTreeMap<String, i64>>> {
-        let url = format!("{GITHUB_API_URL}/repos/{owner}/{repo}/languages");
+        let github_api_url = get_github_api_url();
+        let url = format!("{github_api_url}/repos/{owner}/{repo}/languages");
         let languages: BTreeMap<String, i64> = self.http_client.get(url).send().await?.json().await?;
         Ok(Some(languages))
     }
@@ -363,4 +367,10 @@ fn new_release_from(value: octorust::types::Release) -> Release {
         ts: value.published_at,
         url: value.html_url,
     }
+}
+
+/// Fetch from the environment variable GITHUB_API_URL or use the default value.
+fn get_github_api_url() -> String {
+    env::var("GITHUB_API_URL")
+        .unwrap_or_else(|_| "https://api.github.com".to_string())
 }
