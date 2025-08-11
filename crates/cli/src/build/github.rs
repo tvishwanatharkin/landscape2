@@ -169,7 +169,7 @@ async fn collect_repository_data(gh: Object<DynGH>, repo_url: &str) -> Result<Re
 }
 
 /// GitHub API base url.
-const GITHUB_API_URL: &str = "https://api.github.com";
+const GITHUB_API_URL: &str = env::var("GITHUB_API_URL").unwrap_or("https://api.github.com".to_string());
 
 /// Type alias to represent a GH trait object.
 type DynGH = Box<dyn GH + Send + Sync>;
