@@ -143,9 +143,6 @@ async fn collect_repository_data(gh: Object<DynGH>, repo_url: &str) -> Result<Re
     let participation_stats = gh.get_participation_stats(&owner, &repo).await?.all;
     let contributors_url = format!("https://{}/{}", get_github_host(), format!("{owner}/{repo}/graphs/contributors"));
 
-    println!("owner: {}", owner);
-    println!("repo: {}", repo);
-    println!("contributors_url: {}", contributors_url);
     // Prepare repository instance using the information collected
     Ok(RepositoryGithubData {
         generated_at: Utc::now(),
@@ -213,11 +210,12 @@ impl GHApi {
     fn new(token: &str) -> Result<Self> {
         // Setup octorust GitHub API client
         let user_agent = format!("{}/{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
-        let gh_client = octorust::Client::custom(
+        let mut gh_client = octorust::Client::custom(
             user_agent.clone(),
             Credentials::Token(token.to_string()),
             reqwest_middleware::ClientBuilder::new(reqwest::Client::builder().build()?).build(),
         );
+        octorust::Client::with_host_override(&mut gh_client, get_github_api_url());
 
         // Setup HTTP client ready to make requests to the GitHub API
         // (for some operations that cannot be done with the octorust client)
