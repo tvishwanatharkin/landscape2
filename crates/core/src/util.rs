@@ -80,7 +80,7 @@ pub(crate) fn validate_url(kind: &str, url: Option<&String>) -> Result<()> {
             }
             "facebook" => return check_domains(&["facebook.com"]),
             "flickr" => return check_domains(&["flickr.com"]),
-            ///"github" => return check_domains(&["github.com"]),
+            //"github" => return check_domains(&["github.com"]),
             "instagram" => return check_domains(&["instagram.com"]),
             "linkedin" => return check_domains(&["linkedin.com"]),
             "pinterest" => return check_domains(&["pinterest.com"]),
